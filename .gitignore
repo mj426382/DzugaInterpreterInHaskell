@@ -21,3 +21,10 @@ cabal.project.local
 cabal.project.local~
 .HTF/
 .ghc.environment.*
+*.txt
+*.bak
+*.exe
+*.x
+*.y
+*.info
+.vscode

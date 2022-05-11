@@ -1,0 +1,18 @@
+int dzuga () {
+  int a[7] = [4, 3, 2, 1];
+  a[6] = 5;
+  print("Tablica to:\n");
+  print(a);
+  print("\n");
+  int max = a[0];
+  int index = 0;
+  while (index < 7) {
+      if (max < a[index]) {
+          max = a[index];
+      }
+      index++;
+  }
+  print("maximum to:\n");
+  print(max);
+  return 0 ;
+}
