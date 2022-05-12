@@ -1,0 +1,10 @@
+int f(int v) {
+    return v;
+}
+
+int dzuga() {
+    print(f);
+    print("\n");
+    print(f(7));
+    return 0;
+}

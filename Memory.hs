@@ -28,8 +28,8 @@ module Memory where
         IntVal integer <- readFromMemory ident
         return integer
 
-    readFuncFromMemory :: Ident -> II FuncDef
-    readFuncFromMemory ident = do
+    readFunFromMemory :: Ident -> II FunDef
+    readFunFromMemory ident = do
         FunVal fun <- readFromMemory ident
         return fun
 
@@ -37,8 +37,3 @@ module Memory where
     readArrayFromMemory ident = do
         ArrayVal array <- readFromMemory ident
         return array
-
-    -- isInterativeMode :: II Bool
-    -- isInterativeMode = do
-    --     (_, _, mode) <- get
-    --     return $ mode == Interactive

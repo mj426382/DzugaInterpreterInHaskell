@@ -1,0 +1,13 @@
+int fact(int v) {
+    if (v == 1) {
+        return 1;
+    }
+    return v * fact(v-1);
+}
+
+int dzuga() {
+    print(fact);
+    print("\n");
+    print(fact(21));
+    return 0;
+}

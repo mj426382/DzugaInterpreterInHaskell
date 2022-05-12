@@ -1,0 +1,4 @@
+int dzuga() {
+    print("DZUGA");
+    return 0;
+}

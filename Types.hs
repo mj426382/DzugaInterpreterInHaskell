@@ -16,9 +16,7 @@ module Types where
     -- way of passing argument to function
     data PassArgType = ByValue | ByRef deriving Show
 
-    -- argument passed to function (name of variable, type of variable, way of passing argument)
-    type FunArg = (String, Type, PassArgType)
-
+    type FunArg = (String, Type)
     -- list of arguments passed to function
     type FunArgList = [FunArg]
 
@@ -27,13 +25,13 @@ module Types where
     type CaptureGroup = [CaptureGroupElement]
 
     -- function/lambda - fun body, environment when declared function, return type, capture group when declared function/lambda (function always empty)
-    type FuncDef = ([Stmt], MyEnv, FunArgList, Type, CaptureGroup)
+    type FunDef = ([Stmt], MyEnv, FunArgList, Type)
 
     -- list definition - hold type and list of values
     type ArrayDef = (Type, [MemVal])
 
     -- general type for value in memory (in store)
-    data MemVal = BoolVal Bool | IntVal Integer | StringVal String | FunVal FuncDef | ArrayVal ArrayDef
+    data MemVal = BoolVal Bool | IntVal Integer | StringVal String | FunVal FunDef | ArrayVal ArrayDef
 
     data TypeCheckExceptions = InvalidTypeInDeclarationException Type | OverridingConstException Type | NotInitializedConst Type | NotAnArrayException | TypeCheckException Type Type | FuncApplicationException | NonexistingIdentifierException String deriving Show
 

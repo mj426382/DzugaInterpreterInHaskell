@@ -1,15 +1,13 @@
 module DzugaInterpreter where
     import AbsGrammar
-
-    import Data.Map as Map
-    import Data.Maybe
+    import Memory
+    import TypeChecker
+    import Types
 
     import Control.Monad.Reader
     import Control.Monad.Except
-
-    import Types
-    import Memory
-    import TypeChecker
+    import Data.Map as Map
+    import Data.Maybe
 
     makeArrayString :: [MemVal] -> String
     makeArrayString [] = ""
@@ -20,7 +18,7 @@ module DzugaInterpreter where
     makeString (IntVal i) = show i
     makeString (BoolVal b) = show b
     makeString (StringVal s) = s
-    makeString (FunVal (stmt, env, arg, typ, capture)) = "Function (" ++ show arg ++ ") -> " ++ show typ
+    makeString (FunVal (stmt, env, arg, typ)) = "Type: " ++ show typ ++ "Args: " ++ show arg
     makeString (ArrayVal (typ, array)) = "[" ++ makeArrayString array ++ "]"
 
     evalRelOp GTH e1 e2 = e1 > e2
@@ -41,9 +39,9 @@ module DzugaInterpreter where
 
     evalExpression (EVar ident) = readFromMemory ident
 
-    -- evalExpression (EApp ident vars) = do
-    --     (env2, Just ret) <- runFunc ident vars
-    --     return ret
+    evalExpression (EApp identifier args) = do
+        (env2, Just ret) <- runFunction identifier args
+        return ret
 
     evalExpression (ELitInt x) = return $ IntVal x
     evalExpression (EAdd e1 op e2) = do
@@ -87,12 +85,6 @@ module DzugaInterpreter where
 
     evalExpression (EString e) = return $ StringVal e
 
-    --function
-    -- evalExpression (ELambda capture args returnType (Block stmts)) = do
-    --     argsList <- mapM argToFunArg args
-    --     captureGroup <- mapM constructCaptureGroup capture
-    --     return $ FunVal (stmts, Map.empty, argsList, returnType, captureGroup)
-
     --array
     evalExpression (EArrayVar identifier expr) = do
         IntVal i <- evalExpression expr
@@ -129,6 +121,43 @@ module DzugaInterpreter where
         tail <- createEmptyList (n - 1) typ
         return $ defType : tail
 
+    getMemValArrayFromExpr :: [Expr] -> II [MemVal]
+    getMemValArrayFromExpr [] = return $ []
+    getMemValArrayFromExpr [expr] = do
+        memVal <- evalExpression expr
+        return $ [memVal]
+    getMemValArrayFromExpr (expr:rest) = do
+        memVal <- evalExpression expr
+        restVals <- getMemValArrayFromExpr rest
+        return $ (memVal : restVals)
+
+    addArgsToInterpreterEnv :: [FunArg] -> [MemVal] -> MyEnv -> II MyEnv
+    addArgsToInterpreterEnv [] [] env = do
+        return $ env
+    addArgsToInterpreterEnv (funArg:rest) (memVal:restMemVals) env = do
+        let (argName, typ) = funArg
+        env <- local (const env) (addVarToMemory (Ident argName) memVal)
+        env <- local (const env) (addArgsToInterpreterEnv rest restMemVals env)
+        return $ env
+
+    runFunction :: Ident -> [Expr] -> II (MyEnv, ReturnResult)
+    runFunction identifier exprs = do
+        funDef <- readFunFromMemory identifier
+        let (stmts, env, argList, typ) = funDef
+        memVals <- getMemValArrayFromExpr exprs
+
+        let funInnerDef = (stmts, env, argList, typ)
+        env <- local (const env) (addVarToMemory identifier (FunVal funInnerDef))
+
+        env2 <- local (const env) (addArgsToInterpreterEnv argList memVals env)
+        (env2, result) <- local (const env2) (interpretMany stmts)
+        if typ == Void then
+            return (env2, Nothing)
+        else
+            if isNothing result then
+                throwError NoReturnException
+            else
+                return (env2, result)
 
     execStmt :: Stmt -> II (MyEnv, ReturnResult)
 
@@ -272,6 +301,15 @@ module DzugaInterpreter where
         env <- ask
         return (env, Nothing)
 
+    execStmt (Ret expr) = do
+        res <- evalExpression expr
+        env <- ask
+        return (env, Just res)
+
+    execStmt (VRet) = do
+        env <- ask
+        return (env, Nothing)
+
     -- execStmt Break = do
     -- execStmt Continue = do
 
@@ -290,13 +328,24 @@ module DzugaInterpreter where
         env <- ask
         return (env, Nothing)
 
+    createFunArgList :: [Arg] -> FunArgList
+    createFunArgList [] = []
+    createFunArgList (arg:rest) = do
+        let (Arg typ (Ident identifier)) = arg
+        let singleArg = (identifier, typ)
+        let result = singleArg : (createFunArgList rest)
+        result
+
     interpretProgram :: [TopDef] -> II (MyEnv, ReturnResult)
     interpretProgram (fun:rest) = do
         let (FnDef typ identifier args block) = fun
         let (Ident functionName) = identifier
+        let (Block stmts) = block
+        env <- ask
+        let funInnerDef = (stmts, env, (createFunArgList args), typ)
+        env <- local (const env) (addVarToMemory identifier (FunVal funInnerDef))
         if (functionName == "dzuga") then do
-            let (Block stmts) = block
             interpretMany stmts
         else do
-            env <- ask
+            (env, result) <- local (const env) (interpretProgram rest)
             return (env, Nothing)
