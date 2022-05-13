@@ -1,11 +1,11 @@
 module TypeCheckHelpers where
-    import AbsGrammar
-    import Types
+    import AbsGrammar ( Ident(..), Type(..), Arg(..) )
+    import Types( TC, TypeCheckExceptions(NonexistingIdentifierException) )
 
-    import Control.Monad.Reader
-    import Control.Monad.Except
-    import Data.Map as Map
-    import Data.Maybe
+    import Control.Monad.Reader ( MonadReader(ask) )
+    import Control.Monad.Except ( MonadError(throwError) )
+    import Data.Map ( lookup )
+
 
     evalCorrectArray :: Type -> Maybe Type
     evalCorrectArray (Array typ) = Just (Array typ)
@@ -18,7 +18,7 @@ module TypeCheckHelpers where
     getTypeFromEnv :: Ident -> TC Type
     getTypeFromEnv (Ident ident) = do
         env <- ask
-        case Map.lookup ident env of
+        case Data.Map.lookup ident env of
             Nothing -> throwError $ NonexistingIdentifierException ident
             Just typ -> return typ
 

@@ -1,13 +1,14 @@
 module CheckingStatements where
-    import AbsGrammar
-    import CheckingPreparation
-    import TypeCheckHelpers
-    import Types
+    import AbsGrammar( Ident(Ident),Type(Int, Bool, Array),Item(InitArr, NoInit, NoInitArr, Init),Stmt(Decr, Decl, While, Repeat, For, Cond, CondElse, BStmt, Ass,AddArr, Incr),Block(Block) )
+    import CheckingPreparation( checkExprArray,prepareCheckType,prepareCheckTypeExpr,prepareExprType )
+    import TypeCheckHelpers( evalCorrectArray,getTypeFromEnv,isCorrectStmtType,isConstType,getStableTypeForConst )
+    import Types( TCRes,TC,TCEnv,TypeCheckExceptions(NotAnArrayException, NotInitializedConst,InvalidTypeInDeclarationException, OverridingConstException) )
 
-    import Control.Monad.Reader
-    import Control.Monad.Except
-    import Data.Map as Map
-    import Data.Maybe
+    import Control.Monad.Reader ( unless, MonadReader(ask, local) )
+    import Control.Monad.Except ( unless, MonadError(throwError) )
+    import Data.Map ( insert )
+    import Data.Maybe ( isNothing )
+    
 
     checkStatementType :: Stmt -> TC (TCEnv, TCRes)
 
@@ -17,7 +18,7 @@ module CheckingStatements where
         unless isCorrect $ throwError $ InvalidTypeInDeclarationException typ
         unless (not isConst) $ throwError $ NotInitializedConst typ
         env <- ask
-        return (Map.insert identifier typ env, Nothing)
+        return (Data.Map.insert identifier typ env, Nothing)
 
     checkStatementType (Decl typ [(NoInitArr (Ident identifier) expr)]) = do
         isCorrect <- isCorrectStmtType typ
@@ -26,7 +27,7 @@ module CheckingStatements where
         unless (not isConst) $ throwError $ NotInitializedConst typ
         prepareCheckTypeExpr expr Int
         env <- ask
-        return (Map.insert identifier (Array typ) env, Nothing)
+        return (Data.Map.insert identifier (Array typ) env, Nothing)
 
     checkStatementType (Decl typ [(Init (Ident identifier) expr)]) = do
         isCorrect <- isCorrectStmtType typ
@@ -34,7 +35,7 @@ module CheckingStatements where
         stableType <- getStableTypeForConst typ
         prepareCheckTypeExpr expr stableType
         env <- ask
-        return (Map.insert identifier typ env, Nothing)
+        return (Data.Map.insert identifier typ env, Nothing)
 
     checkStatementType (Decl typ [(InitArr (Ident identifier) expr exprs)]) = do
         isCorrect <- isCorrectStmtType typ
@@ -43,7 +44,7 @@ module CheckingStatements where
         prepareCheckTypeExpr expr stableType
         checkExprArray exprs typ
         env <- ask
-        return (Map.insert identifier (Array typ) env, Nothing)
+        return (Data.Map.insert identifier (Array typ) env, Nothing)
 
     checkStatementType (Decl typ (item:rest)) = do
         (env, ret) <- checkStatementType (Decl typ [item])
@@ -62,7 +63,7 @@ module CheckingStatements where
         prepareCheckTypeExpr expr2 Int
         let (Ident identifier) = ident
         (env, ret) <- checkStatementType stm
-        return (Map.insert identifier Int env, Nothing)
+        return (Data.Map.insert identifier Int env, Nothing)
 
     checkStatementType (Cond expr stmt) = do
         prepareCheckTypeExpr expr Bool

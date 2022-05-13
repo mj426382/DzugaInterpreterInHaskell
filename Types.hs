@@ -1,44 +1,25 @@
 module Types where
-    import AbsGrammar
+    import AbsGrammar ( Type, Stmt )
 
-    import Data.Map as Map
-    import Data.Maybe
+    import Control.Monad.Reader ( ReaderT )
+    import Control.Monad.Except ( ExceptT )
+    import Data.Map ( Map )
 
-    import Control.Monad.Reader
-    import Control.Monad.Except
 
-    -- Environment, maps variable/function name to location
-    type MyEnv = Map.Map String MemVal
+    type ReturnResult = Maybe ValueInMemory
 
-    -- return value of block of statements. Nothing when no return, Just MemVal if return occured
-    type ReturnResult = Maybe MemVal
+    type FArg = (String, Type)
+    type Function = ([Stmt], IIEnv, [FArg], Type)
 
-    -- way of passing argument to function
-    data PassArgType = ByValue | ByRef deriving Show
+    type Array = (Type, [ValueInMemory])
 
-    type FunArg = (String, Type)
-    -- list of arguments passed to function
-    type FunArgList = [FunArg]
-
-    -- list of "capture group" - name of variable and value when created lambda
-    type CaptureGroupElement = (Ident, MemVal)
-    type CaptureGroup = [CaptureGroupElement]
-
-    -- function/lambda - fun body, environment when declared function, return type, capture group when declared function/lambda (function always empty)
-    type FunDef = ([Stmt], MyEnv, FunArgList, Type)
-
-    -- list definition - hold type and list of values
-    type ArrayDef = (Type, [MemVal])
-
-    -- general type for value in memory (in store)
-    data MemVal = BoolVal Bool | IntVal Integer | StringVal String | FunVal FunDef | ArrayVal ArrayDef
+    data ValueInMemory = IntValue Integer | BooleanValue Bool | StringValue String | ArrayValue Array | FunctionValue Function
 
     data TypeCheckExceptions = InvalidTypeInDeclarationException Type | OverridingConstException Type | NotInitializedConst Type | NotAnArrayException | TypeCheckException Type Type | FuncApplicationException | NonexistingIdentifierException String deriving Show
-
     data RuntimeExceptions = DivisionByZeroException | ModulusByZeroException | NoReturnException | OutOfRangeExeption Integer | UnitializedException String deriving Show
 
-    type II = ReaderT MyEnv (ExceptT RuntimeExceptions IO)
-
-    type TCEnv = (Map.Map String Type)
+    type IIEnv = (Data.Map.Map String ValueInMemory)
+    type II = ReaderT IIEnv (ExceptT RuntimeExceptions IO)
+    type TCEnv = (Data.Map.Map String Type)
     type TC = ReaderT  TCEnv (ExceptT TypeCheckExceptions IO)
     type TCRes = Maybe Type

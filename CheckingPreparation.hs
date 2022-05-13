@@ -1,12 +1,12 @@
 module CheckingPreparation where
-    import AbsGrammar
-    import TypeCheckHelpers
-    import Types
+    import AbsGrammar( Expr(..), Type(Array, Bool, Str, Fun, Void, Int) )
+    import TypeCheckHelpers( evalCorrectArray,evalCorrectFunction,getTypeFromEnv,getStableTypeForConst )
+    import Types( TC,TypeCheckExceptions(NotAnArrayException, TypeCheckException,FuncApplicationException) )
 
-    import Control.Monad.Reader
-    import Control.Monad.Except
-    import Data.Map as Map
-    import Data.Maybe
+    import Control.Monad.Reader ( unless )
+    import Control.Monad.Except ( unless, MonadError(throwError) )
+    import Data.Maybe ( isNothing )
+
 
     checkExprArray :: [Expr] -> Type -> TC ()
     checkExprArray [] typ =

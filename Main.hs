@@ -1,64 +1,61 @@
 module Main where
-    import System.IO ( stdin, hGetContents, hPutStrLn, stderr, getContents, hPutStr )
-    import System.Environment ( getArgs, getProgName )
-    import System.Exit ( exitFailure, exitSuccess )
-    import Control.Exception (catch, IOException)    
-    import Data.Map as Map
-
-    import TypeChecker
-    import Types
-    import DzugaInterpreter
-
-    import Control.Monad.Reader
-    import Control.Monad.Except
-
-    import ParGrammar
-    import AbsGrammar
+    import AbsGrammar ( Program(Program) )
+    import DzugaInterpreter ( interpretProgram )
+    import ParGrammar ( pProgram, myLexer )
     import ErrM
+    import TypeChecker ( checkStatementTypeProgram )
+    import Types ( RuntimeExceptions(ModulusByZeroException, NoReturnException, OutOfRangeExeption, UnitializedException, DivisionByZeroException), TypeCheckExceptions(NotAnArrayException, TypeCheckException, FuncApplicationException, NonexistingIdentifierException, InvalidTypeInDeclarationException, OverridingConstException, NotInitializedConst) )
 
-    exitWithError :: String -> IO ()
-    exitWithError msg = do
-        hPutStrLn stderr msg
+    import Control.Monad.Reader ( ReaderT(runReaderT) )
+    import Control.Monad.Except ( runExceptT )
+    import Data.Map ( empty )
+    import System.Environment ( getArgs )
+    import System.Exit ( exitFailure )
+
+
+    returnError :: String -> IO ()
+    returnError msg = do
+        putStr msg
         exitFailure
+        
+    readCode :: String -> IO ()
+    readCode fileName = readFile fileName >>= parse
 
     parse :: String -> IO ()
     parse input =
         case pProgram (myLexer input) of
             (Ok s) -> do
                 let Program program = s
-                typeCheckResult <- runExceptT $ runReaderT (checkStatementTypeProgram program) Map.empty
+                typeCheckResult <- runExceptT $ runReaderT (checkStatementTypeProgram program) Data.Map.empty
                 case typeCheckResult of
                     Left err -> do
-                        hPutStr stderr "Typecheck error. "        
+                        putStr "Typecheck err: "
                         case err of
-                            TypeCheckException given expected -> exitWithError $ "Expected " ++ show expected ++ " given: "++ show given
-                            FuncApplicationException -> exitWithError "Invalid function argument application"
-                            NonexistingIdentifierException i -> exitWithError $ "Identifier " ++ i ++ " doesn't exist"
-                            InvalidTypeInDeclarationException typ -> exitWithError $ "Invalid use of type " ++ show typ ++ " in declaration"
-                            OverridingConstException typ -> exitWithError $ "Try to override const " ++ show typ ++ " in declaration"
-                            NotInitializedConst typ -> exitWithError $ "Not initialized const " ++ show typ ++ " in declaration"
-                            NotAnArrayException -> exitWithError $ "Not an array"
+                            TypeCheckException given expected -> returnError $ "Expected " ++ show expected ++ " given: "++ show given
+                            FuncApplicationException -> returnError "Invalid function argument application"
+                            NonexistingIdentifierException identifier -> returnError $ "Identifier " ++ identifier ++ " doesn't exist"
+                            InvalidTypeInDeclarationException typ -> returnError $ "Invalid use of type " ++ show typ ++ " in declaration"
+                            OverridingConstException typ -> returnError $ "Try to override const " ++ show typ ++ " in declaration"
+                            NotInitializedConst typ -> returnError $ "Not initialized const " ++ show typ ++ " in declaration"
+                            NotAnArrayException -> returnError $ "Not an array"
                     Right _ -> do
-                        runTimeResult <- runExceptT $ runReaderT (interpretProgram program) Map.empty
+                        runTimeResult <- runExceptT $ runReaderT (interpretProgram program) Data.Map.empty
                         case runTimeResult of
                             Left err -> do
-                                hPutStr stderr "Runtime exception. "
+                                putStr "Runtime error: "
                                 case err of
-                                    DivisionByZeroException -> exitWithError "Division by 0"
-                                    ModulusByZeroException -> exitWithError "Modulo 0"
-                                    NoReturnException ->  exitWithError "Function didn't return any value"
-                                    OutOfRangeExeption i -> exitWithError ("Index " ++ show i ++ " out of range!")
-                                    UnitializedException i -> exitWithError ("Identifier unitialized!" ++ show i)
+                                    NoReturnException ->  returnError "Function has to return some value"
+                                    OutOfRangeExeption identifier -> returnError ("Index " ++ show identifier ++ " out of range!")
+                                    UnitializedException identifier -> returnError ("You have to initialized identifier" ++ show identifier ++ "!")
+                                    DivisionByZeroException -> returnError "You cannot divide by 0!"
+                                    ModulusByZeroException -> returnError "You cannot module by 0!"
                             Right _ -> return()
                 return ()
-            (Bad s) -> exitWithError "Parse error"
-
-    parseFile :: String -> IO ()
-    parseFile fileName = readFile fileName >>= parse
+            (Bad s) -> returnError "Error while parsing"
 
     main :: IO ()
     main = do
         args <- getArgs
         case args of
-            [] -> exitWithError "You need to provide file names to run interpreter"
-            files -> mapM_ parseFile files
+            [] -> returnError "You need to provide file names to run interpreter"
+            files -> mapM_ readCode files

@@ -8,6 +8,6 @@ int fact(int v) {
 int dzuga() {
     print(fact);
     print("\n");
-    print(fact(21));
+    print(fact(8));
     return 0;
 }
