@@ -8,7 +8,7 @@ module CheckingStatements where
     import Control.Monad.Except ( unless, MonadError(throwError) )
     import Data.Map ( insert )
     import Data.Maybe ( isNothing )
-    
+
 
     checkStatementType :: Stmt -> TC (TCEnv, TCRes)
 

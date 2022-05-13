@@ -20,6 +20,7 @@ module Types where
 
     type IIEnv = (Data.Map.Map String ValueInMemory)
     type II = ReaderT IIEnv (ExceptT RuntimeExceptions IO)
+
     type TCEnv = (Data.Map.Map String Type)
     type TC = ReaderT  TCEnv (ExceptT TypeCheckExceptions IO)
     type TCRes = Maybe Type
