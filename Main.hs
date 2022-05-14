@@ -18,7 +18,7 @@ module Main where
     returnError msg = do
         putStr msg
         exitFailure
-        
+
     readCode :: String -> IO ()
     readCode fileName = readFile fileName >>= parse
 
