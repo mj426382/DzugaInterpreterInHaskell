@@ -1,0 +1,12 @@
+int dzuga () {
+  const int b = 21;
+  int a = 0;
+  repeat 21 {
+    if(a >= 3 && a <= b) {
+    print(a);
+    print("\n");
+    }
+    a++;
+  }
+  return 0 ;
+}

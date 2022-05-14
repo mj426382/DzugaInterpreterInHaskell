@@ -96,7 +96,7 @@ module CheckingStatements where
         typ <- getTypeFromEnv identifier
         let arrayType = evalCorrectArray typ
         if isNothing arrayType then
-            throwError $NotAnArrayException
+            throwError $ NotAnArrayException
         else do
             prepareCheckTypeExpr expr1 Int
             let (Just (Array innerType)) = arrayType
