@@ -1,8 +1,7 @@
 module CheckingStatements where
     import AbsGrammar( Ident(Ident),Type(Int, Bool, Array),Item(InitArr, NoInit, NoInitArr, Init),Stmt(Decr, Decl, While, Repeat, For, Cond, CondElse, BStmt, Ass,AddArr, Incr),Block(Block) )
     import CheckingPreparation( checkExprArray,prepareCheckType,prepareCheckTypeExpr,prepareExprType )
-    import TypeCheckHelpers( evalCorrectArray,getTypeFromEnv,isCorrectStmtType,isConstType,getStableTypeForConst )
-    import Types( TCRes,TC,TCEnv,TypeCheckExceptions(NotAnArrayException, NotInitializedConst,InvalidTypeInDeclarationException, OverridingConstException) )
+    import TypeCheckHelpers( evalCorrectArray,isCorrectStmtType,getStableTypeForConst,TCRes,TC,TCEnv,TypeCheckExceptions(NotAnArrayException, NotInitializedConst,InvalidTypeInDeclarationException, OverridingConstException), isConstType, getTypeFromEnv )
 
     import Control.Monad.Reader ( unless, MonadReader(ask, local) )
     import Control.Monad.Except ( unless, MonadError(throwError) )

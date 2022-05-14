@@ -1,7 +1,6 @@
 module CheckingPreparation where
     import AbsGrammar( Expr(..), Type(Array, Bool, Str, Fun, Void, Int) )
-    import TypeCheckHelpers( evalCorrectArray,evalCorrectFunction,getTypeFromEnv,getStableTypeForConst )
-    import Types( TC,TypeCheckExceptions(NotAnArrayException, TypeCheckException,FuncApplicationException) )
+    import TypeCheckHelpers( evalCorrectArray,evalCorrectFunction,getTypeFromEnv,getStableTypeForConst, TC,TypeCheckExceptions(NotAnArrayException, TypeCheckException,FuncApplicationException) )
 
     import Control.Monad.Reader ( unless )
     import Control.Monad.Except ( unless, MonadError(throwError) )

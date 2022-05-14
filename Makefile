@@ -18,7 +18,7 @@ all : Main
 
 # Rules for building the parser.
 
-Main.hs AbsGrammar.hs LexGrammar.x ParGrammar.y PrintGrammar.hs TestGrammar.hs Types.hs TypeChecker.hs: grammar.cf
+Main.hs AbsGrammar.hs LexGrammar.x ParGrammar.y PrintGrammar.hs TestGrammar.hs Types.hs StaticTypeChecker.hs: grammar.cf
 	bnfc --haskell grammar.cf
 
 %.hs : %.y
@@ -27,7 +27,7 @@ Main.hs AbsGrammar.hs LexGrammar.x ParGrammar.y PrintGrammar.hs TestGrammar.hs T
 %.hs : %.x
 	${ALEX} ${ALEX_OPTS} $<
 
-Main : Main.hs AbsGrammar.hs LexGrammar.hs ParGrammar.hs PrintGrammar.hs TestGrammar.hs Types.hs TypeChecker.hs
+Main : Main.hs AbsGrammar.hs LexGrammar.hs ParGrammar.hs PrintGrammar.hs TestGrammar.hs Types.hs StaticTypeChecker.hs
 	${GHC} ${GHC_OPTS} $@
 
 # Rules for cleaning generated files.

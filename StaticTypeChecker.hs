@@ -1,9 +1,8 @@
-module TypeChecker where
+module StaticTypeChecker where
     
     import AbsGrammar( Ident(Ident), Type(Fun), Block(Block), Arg(..), TopDef(..) )
     import CheckingStatements ( checkStatementTypeForMany )
-    import TypeCheckHelpers ( getTypesFromArgs )
-    import Types ( TCRes, TC, TCEnv )
+    import TypeCheckHelpers ( getTypesFromArgs, TC, TCRes, TCEnv )
 
     import Control.Monad.Reader ( MonadReader(ask, local) )
     import Data.Map ( insert )

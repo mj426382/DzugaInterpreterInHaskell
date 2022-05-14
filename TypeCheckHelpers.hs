@@ -1,10 +1,16 @@
 module TypeCheckHelpers where
     import AbsGrammar ( Ident(..), Type(..), Arg(..) )
-    import Types( TC, TypeCheckExceptions(NonexistingIdentifierException) )
 
-    import Control.Monad.Reader ( MonadReader(ask) )
-    import Control.Monad.Except ( MonadError(throwError) )
-    import Data.Map ( lookup )
+    import Control.Monad.Reader ( MonadReader(ask), ReaderT )
+    import Control.Monad.Except ( MonadError(throwError), ExceptT )
+    import Data.Map ( lookup, Map )
+
+
+    data TypeCheckExceptions = InvalidTypeInDeclarationException Type | OverridingConstException Type | NotInitializedConst Type | NotAnArrayException | TypeCheckException Type Type | FuncApplicationException | NonexistingIdentifierException String deriving Show
+
+    type TCEnv = (Data.Map.Map String Type)
+    type TC = ReaderT  TCEnv (ExceptT TypeCheckExceptions IO)
+    type TCRes = Maybe Type
 
 
     evalCorrectArray :: Type -> Maybe Type

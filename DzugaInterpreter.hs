@@ -1,9 +1,8 @@
 module DzugaInterpreter where
     import AbsGrammar( Ident(..),RelOp(LTH),MulOp(Mod, Div),Expr(EVar, EApp, ELitInt, EAdd, EMul, Neg, ELitFalse, ELitTrue,Not, EAnd, EOr, EString, EArrayVar, ERel),Type(Void),Item(InitArr, NoInit, Init, NoInitArr),Stmt(VRet, Decl, Ass, AddArr, Decr, Cond, CondElse, For, Repeat,BStmt, Incr, While, Print, Ret),Block(Block),Arg(..),TopDef(..) )
-    import DzugaInterpreterHelpers( makeString, defaultValueOfType, createEmptyList )
+    import DzugaInterpreterHelpers( makeString, defaultValueOfType, createEmptyList, ValueInMemory (IntValue, BooleanValue, FunctionValue, ArrayValue, StringValue), II, FArg, IIEnv, ReturnResult, RuntimeExceptions (NoReturnException, OutOfRangeExeption, DivisionByZeroException, ModulusByZeroException) )
     import Memory( addVarToMemory,readFromMemory,readIntFromMemory,readFunFromMemory,readArrayFromMemory )
     import Operators ( makeRel, makeMul, makeAdd )
-    import Types( II,RuntimeExceptions(OutOfRangeExeption, DivisionByZeroException,ModulusByZeroException, NoReturnException),ValueInMemory(..),ReturnResult,IIEnv,FArg )
 
     import Control.Monad.Reader( unless, MonadIO(liftIO), MonadReader(local, ask) )
     import Control.Monad.Except( unless, MonadIO(liftIO), MonadError(throwError) )

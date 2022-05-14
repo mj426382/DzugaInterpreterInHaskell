@@ -3,8 +3,9 @@ module Main where
     import DzugaInterpreter ( interpretProgram )
     import ParGrammar ( pProgram, myLexer )
     import ErrM
-    import TypeChecker ( checkStatementTypeProgram )
-    import Types ( RuntimeExceptions(ModulusByZeroException, NoReturnException, OutOfRangeExeption, UnitializedException, DivisionByZeroException), TypeCheckExceptions(NotAnArrayException, TypeCheckException, FuncApplicationException, NonexistingIdentifierException, InvalidTypeInDeclarationException, OverridingConstException, NotInitializedConst) )
+    import StaticTypeChecker ( checkStatementTypeProgram )
+    import DzugaInterpreterHelpers ( RuntimeExceptions(ModulusByZeroException, NoReturnException, OutOfRangeExeption, UnitializedException, DivisionByZeroException))
+    import TypeCheckHelpers (TypeCheckExceptions(NotAnArrayException, TypeCheckException, FuncApplicationException, NonexistingIdentifierException, InvalidTypeInDeclarationException, OverridingConstException, NotInitializedConst))
 
     import Control.Monad.Reader ( ReaderT(runReaderT) )
     import Control.Monad.Except ( runExceptT )

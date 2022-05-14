@@ -1,6 +1,6 @@
 module Memory where
     import AbsGrammar ( Ident(..) )
-    import Types( II,RuntimeExceptions(UnitializedException),ValueInMemory(ArrayValue, IntValue, FunctionValue),IIEnv,Function,Array )
+    import DzugaInterpreterHelpers( II,RuntimeExceptions(UnitializedException),ValueInMemory(ArrayValue, IntValue, FunctionValue),IIEnv,Function,Array )
 
     import Control.Monad.Reader ( MonadReader(ask) )
     import Control.Monad.Except ( MonadError(throwError) )

@@ -1,7 +1,25 @@
 module DzugaInterpreterHelpers where
-    import Types ( ValueInMemory(..), II )
-    import AbsGrammar ( Type(Array, Bool, Int, Str) )
-    
+    import AbsGrammar ( Type(Array, Bool, Int, Str), Stmt )
+
+    import Control.Monad.Reader ( ReaderT )
+    import Control.Monad.Except ( ExceptT )
+    import Data.Map ( Map )
+
+
+    type ReturnResult = Maybe ValueInMemory
+
+    type FArg = (String, Type)
+    type Function = ([Stmt], IIEnv, [FArg], Type)
+
+    type Array = (Type, [ValueInMemory])
+
+    data ValueInMemory = IntValue Integer | BooleanValue Bool | StringValue String | ArrayValue Array | FunctionValue Function
+
+    type IIEnv = (Data.Map.Map String ValueInMemory)
+    type II = ReaderT IIEnv (ExceptT RuntimeExceptions IO)
+
+    data RuntimeExceptions = DivisionByZeroException | ModulusByZeroException | NoReturnException | OutOfRangeExeption Integer | UnitializedException String deriving Show
+
 
     makeArrayString :: [ValueInMemory] -> String
     makeArrayString [] = ""
