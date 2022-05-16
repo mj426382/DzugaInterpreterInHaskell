@@ -14,7 +14,7 @@ In interpreter i also use both monads, i use the same way of storing exceptions 
 
 # Running
 
-You need to have alex, happy, BNFC, ghci and make installed on your computer to run it.
+You need to have: BNFC, ghci and make installed on your computer to run it.
 
 ### Compile program with
 
