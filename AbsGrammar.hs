@@ -27,7 +27,6 @@ data Stmt
     | BStmt Block
     | Decl Type [Item]
     | Ass Ident Expr
-    | AddArr Ident Expr Expr
     | Incr Ident
     | Decr Ident
     | Ret Expr
@@ -35,37 +34,17 @@ data Stmt
     | Cond Expr Stmt
     | CondElse Expr Stmt Stmt
     | While Expr Stmt
-    | For Ident Expr Expr Stmt
-    | Repeat Expr Stmt
     | SExp Expr
-    | Break
-    | Continue
-    | Print Expr
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data Item
-    = NoInit Ident
-    | Init Ident Expr
-    | NoInitArr Ident Expr
-    | InitArr Ident Expr [Expr]
+data Item = NoInit Ident | Init Ident Expr
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data Type
-    = Int
-    | Str
-    | Bool
-    | Void
-    | ConstInt
-    | ConstStr
-    | ConstBool
-    | Array Type
-    | Fun Type [Type]
+data Type = Int | Str | Bool | Void | Fun Type [Type]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Expr
-    = Ekrotka [Expr]
-    | EArrayVar Ident Expr
-    | EVar Ident
+    = EVar Ident
     | ELitInt Integer
     | ELitTrue
     | ELitFalse

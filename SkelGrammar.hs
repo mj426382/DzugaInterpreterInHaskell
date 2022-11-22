@@ -41,7 +41,6 @@ transStmt x = case x of
   AbsGrammar.BStmt block -> failure x
   AbsGrammar.Decl type_ items -> failure x
   AbsGrammar.Ass ident expr -> failure x
-  AbsGrammar.AddArr ident expr1 expr2 -> failure x
   AbsGrammar.Incr ident -> failure x
   AbsGrammar.Decr ident -> failure x
   AbsGrammar.Ret expr -> failure x
@@ -49,19 +48,12 @@ transStmt x = case x of
   AbsGrammar.Cond expr stmt -> failure x
   AbsGrammar.CondElse expr stmt1 stmt2 -> failure x
   AbsGrammar.While expr stmt -> failure x
-  AbsGrammar.For ident expr1 expr2 stmt -> failure x
-  AbsGrammar.Repeat expr stmt -> failure x
   AbsGrammar.SExp expr -> failure x
-  AbsGrammar.Break -> failure x
-  AbsGrammar.Continue -> failure x
-  AbsGrammar.Print expr -> failure x
 
 transItem :: AbsGrammar.Item -> Result
 transItem x = case x of
   AbsGrammar.NoInit ident -> failure x
   AbsGrammar.Init ident expr -> failure x
-  AbsGrammar.NoInitArr ident expr -> failure x
-  AbsGrammar.InitArr ident expr exprs -> failure x
 
 transType :: AbsGrammar.Type -> Result
 transType x = case x of
@@ -69,16 +61,10 @@ transType x = case x of
   AbsGrammar.Str -> failure x
   AbsGrammar.Bool -> failure x
   AbsGrammar.Void -> failure x
-  AbsGrammar.ConstInt -> failure x
-  AbsGrammar.ConstStr -> failure x
-  AbsGrammar.ConstBool -> failure x
-  AbsGrammar.Array type_ -> failure x
   AbsGrammar.Fun type_ types -> failure x
 
 transExpr :: AbsGrammar.Expr -> Result
 transExpr x = case x of
-  AbsGrammar.Ekrotka exprs -> failure x
-  AbsGrammar.EArrayVar ident expr -> failure x
   AbsGrammar.EVar ident -> failure x
   AbsGrammar.ELitInt integer -> failure x
   AbsGrammar.ELitTrue -> failure x

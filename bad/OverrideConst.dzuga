@@ -1,5 +1,0 @@
-int dzuga () {
-  const int a = 7, b = 0;
-  a = 5;
-  return 0 ;
-}

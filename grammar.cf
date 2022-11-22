@@ -28,17 +28,9 @@ NoInit.    Item ::= Ident ;
 
 Init.      Item ::= Ident "=" Expr ;
 
-NoInitArr. Item ::= Ident "[" Expr "]" ;
-
-InitArr.   Item ::= Ident "[" Expr "]" "=" "[" [Expr] "]" ;
-
 separator nonempty Item "," ;
 
-separator nonempty Expr "," ;
-
 Ass.       Stmt ::= Ident "=" Expr  ";" ;
-
-AddArr.    Stmt ::= Ident "[" Expr "]" "=" Expr ";" ;
 
 Incr.      Stmt ::= Ident "++"  ";" ;
 
@@ -54,17 +46,7 @@ CondElse.  Stmt ::= "if" "(" Expr ")" Stmt "else" Stmt  ;
 
 While.     Stmt ::= "while" "(" Expr ")" Stmt ;
 
-For.       Stmt ::= "for" "(" Ident "in" "range" "(" Expr "," Expr ")" ")" Stmt ;
-
-Repeat.    Stmt ::= "repeat" Expr Stmt ;
-
 SExp.      Stmt ::= Expr  ";" ;
-
-Break.     Stmt ::= "break" ";" ;
-
-Continue.  Stmt ::= "continue" ";" ;
-
-Print.     Stmt ::= "print" "(" Expr ")" ";" ;
 
 -- Types ---------------------------------------------------
 
@@ -76,23 +58,11 @@ Bool.      Type ::= "boolean" ;
 
 Void.      Type ::= "void" ;
 
-ConstInt.  Type ::= "const int" ;
-
-ConstStr.  Type ::= "const string" ;
-
-ConstBool. Type ::= "const boolean" ;
-
-Array.     Type ::= Type "[]";
-
 internal   Fun. Type ::= Type "(" [Type] ")" ;
 
 separator  Type "," ;
 
 -- Expressions ---------------------------------------------
-
-Ekrotka.   Expr6 ::= "[" [Expr] "]" ;
-
-EArrayVar. Expr6 ::= Ident "[" Expr "]" ;
 
 EVar.      Expr6 ::= Ident ;
 
@@ -123,8 +93,6 @@ EOr.       Expr ::= Expr1 "||" Expr ;
 coercions  Expr 6 ;
 
 separator  Expr "," ;
-
-separator  Expr6 "," ;
 
 -- operators -----------------------------------------------
 

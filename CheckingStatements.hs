@@ -1,132 +1,107 @@
 module CheckingStatements where
-    import AbsGrammar( Ident(Ident),Type(Int, Bool, Array),Item(InitArr, NoInit, NoInitArr, Init),Stmt(Decr, Decl, While, Repeat, For, Cond, CondElse, BStmt, Ass,AddArr, Incr),Block(Block) )
-    import CheckingPreparation( checkExprArray,prepareCheckType,prepareCheckTypeExpr,prepareExprType )
-    import TypeCheckHelpers( evalCorrectArray,isCorrectStmtType,getStableTypeForConst,TCRes,TC,TCEnv,TypeCheckExceptions(NotAnArrayException, NotInitializedConst,InvalidTypeInDeclarationException, OverridingConstException), isConstType, getTypeFromEnv )
 
-    import Control.Monad.Reader ( unless, MonadReader(ask, local) )
-    import Control.Monad.Except ( unless, MonadError(throwError) )
-    import Data.Map ( insert )
-    import Data.Maybe ( isNothing )
+import AbsGrammar (Block (Block), Expr (EApp), Ident (Ident), Item (Init, NoInit), Stmt (Ass, BStmt, Cond, CondElse, Decl, Decr, Incr, SExp, While), TopDef, Type (Bool, Fun, Int))
+import AddStaticFunctionDeclarations
+import CheckingPreparation (prepareCheckArgsTypes, prepareCheckType, prepareCheckTypeExpr, prepareExprType)
+import Control.Monad.Except (MonadError (throwError), unless)
+import Control.Monad.Reader (MonadReader (ask, local), unless)
+import Data.Map (empty, insert, lookup)
+import Data.Maybe (isNothing)
+import TypeCheckHelpers (TC, TCEnv, TCRes, TypeCheckExceptions (DoubleIdentifierInFunctionDeclarationException, DoubleInitializationException, FuncApplicationException, InvalidTypeInDeclarationException), evalCorrectFunction, getStableTypeForConst, getTypeFromEnv, isConstType, isCorrectStmtType)
 
+checkStatementType :: Stmt -> [TopDef] -> TC (TCEnv, TCRes)
+checkStatementType (Decl typ [(NoInit (Ident identifier))]) functions = do
+  isCorrect <- isCorrectStmtType typ
+  isConst <- isConstType typ
+  unless isCorrect $ throwError $ InvalidTypeInDeclarationException typ
+  env <- ask
+  case Data.Map.lookup identifier env of
+    Nothing -> return (Data.Map.insert identifier typ env, Nothing)
+    Just typ -> throwError $ DoubleInitializationException identifier
+checkStatementType (Decl typ [(Init (Ident identifier) expr)]) functions = do
+  isCorrect <- isCorrectStmtType typ
+  unless isCorrect $ throwError $ InvalidTypeInDeclarationException typ
+  stableType <- getStableTypeForConst typ
+  prepareCheckTypeExpr expr stableType
+  env <- ask
+  case Data.Map.lookup identifier env of
+    Nothing -> return (Data.Map.insert identifier typ env, Nothing)
+    Just typ -> throwError $ DoubleInitializationException identifier
+checkStatementType (Decl typ (item : rest)) functions = do
+  (env, ret) <- checkStatementType (Decl typ [item]) functions
+  local (const env) (checkStatementType (Decl typ rest) functions)
+checkStatementType (While expr stm) functions = do
+  prepareCheckTypeExpr expr Bool
+  checkStatementType stm functions
+checkStatementType (Cond expr stmt) functions = do
+  prepareCheckTypeExpr expr Bool
+  checkStatementType stmt functions
+checkStatementType (CondElse expr stmt1 stmt2) functions = do
+  prepareCheckTypeExpr expr Bool
+  checkStatementType stmt1 functions
+  checkStatementType stmt2 functions
+-- checkStatementType (BStmt block) = do
+--   let (Block blocks) = block
+--   if (length blocks == 0)
+--     then do
+--       env <- ask
+--       return (env, Nothing)
+--     else do
+--       let (Block (stm : rest)) = block
+--       (env, ret) <- checkStatementType stm
+--       local (const env) (checkStatementType (BStmt (Block rest)))
+checkStatementType (Ass identifier expr) functions = do
+  typ <- getTypeFromEnv identifier
+  isConst <- isConstType typ
+  exprType <- prepareExprType expr
+  prepareCheckTypeExpr expr typ
+  env <- ask
+  return (env, Nothing)
+checkStatementType (Incr identifier) functions = do
+  typ <- getTypeFromEnv identifier
+  prepareCheckType typ Int
+  env <- ask
+  return (env, Nothing)
+checkStatementType (Decr identifier) functions = do
+  typ <- getTypeFromEnv identifier
+  prepareCheckType typ Int
+  env <- ask
+  return (env, Nothing)
+checkStatementType (BStmt (Block stmts)) functions = do
+  env <- ask
+  (env1, ret1) <- local (const Data.Map.empty) (addFunctionDeclarations functions)
+  (env2, ret2) <- local (const env1) (addPrintIntDeclaration functions)
+  (env3, ret3) <- local (const env2) (addPrintStringDeclaration functions)
+  (env35, ret35) <- local (const env3) (addReadIntDeclaration functions)
+  (env375, ret375) <- local (const env35) (addReadStringDeclaration functions)
+  (env4, ret4) <- local (const env375) (addPrintBoolDeclaration functions)
+  local (const env4) (checkStatementTypeForMany stmts functions)
+  return (env, Nothing)
+checkStatementType (SExp (EApp identifier args)) functions = do
+  typ <- getTypeFromEnv identifier
+  let functionEvaluation = evalCorrectFunction typ
+  if isNothing functionEvaluation
+    then throwError $ FuncApplicationException
+    else do
+      let (Fun returnedType types) = typ
+      prepareCheckArgsTypes types args
+      env <- ask
+      return (env, Nothing)
+-- typ <- getTypeFromEnv identifier
+-- prepareCheckArgsTypes exprs
+-- env <- ask
+-- return (env, Nothing)
+checkStatementType _ _ = do
+  env <- ask
+  return (env, Nothing)
 
-    checkStatementType :: Stmt -> TC (TCEnv, TCRes)
-
-    checkStatementType (Decl typ [(NoInit (Ident identifier))]) = do
-        isCorrect <- isCorrectStmtType typ
-        isConst <- isConstType typ
-        unless isCorrect $ throwError $ InvalidTypeInDeclarationException typ
-        unless (not isConst) $ throwError $ NotInitializedConst typ
-        env <- ask
-        return (Data.Map.insert identifier typ env, Nothing)
-
-    checkStatementType (Decl typ [(NoInitArr (Ident identifier) expr)]) = do
-        isCorrect <- isCorrectStmtType typ
-        isConst <- isConstType typ
-        unless isCorrect $ throwError $ InvalidTypeInDeclarationException typ
-        unless (not isConst) $ throwError $ NotInitializedConst typ
-        prepareCheckTypeExpr expr Int
-        env <- ask
-        return (Data.Map.insert identifier (Array typ) env, Nothing)
-
-    checkStatementType (Decl typ [(Init (Ident identifier) expr)]) = do
-        isCorrect <- isCorrectStmtType typ
-        unless isCorrect $ throwError $ InvalidTypeInDeclarationException typ
-        stableType <- getStableTypeForConst typ
-        prepareCheckTypeExpr expr stableType
-        env <- ask
-        return (Data.Map.insert identifier typ env, Nothing)
-
-    checkStatementType (Decl typ [(InitArr (Ident identifier) expr exprs)]) = do
-        isCorrect <- isCorrectStmtType typ
-        unless isCorrect $ throwError $ InvalidTypeInDeclarationException typ
-        stableType <- getStableTypeForConst typ
-        prepareCheckTypeExpr expr stableType
-        checkExprArray exprs typ
-        env <- ask
-        return (Data.Map.insert identifier (Array typ) env, Nothing)
-
-    checkStatementType (Decl typ (item:rest)) = do
-        (env, ret) <- checkStatementType (Decl typ [item])
-        local (const env) (checkStatementType (Decl typ rest))
-
-    checkStatementType (While expr stm) = do
-        prepareCheckTypeExpr expr Bool
-        checkStatementType stm
-
-    checkStatementType (Repeat expr stm) = do
-        prepareCheckTypeExpr expr Int
-        checkStatementType stm
-
-    checkStatementType (For ident expr1 expr2 stm) = do
-        prepareCheckTypeExpr expr1 Int
-        prepareCheckTypeExpr expr2 Int
-        let (Ident identifier) = ident
-        (env, ret) <- checkStatementType stm
-        return (Data.Map.insert identifier Int env, Nothing)
-
-    checkStatementType (Cond expr stmt) = do
-        prepareCheckTypeExpr expr Bool
-        checkStatementType stmt
-
-    checkStatementType (CondElse expr stmt1 stmt2) = do
-        prepareCheckTypeExpr expr Bool
-        checkStatementType stmt1
-        checkStatementType stmt2
-
-    checkStatementType (BStmt block) = do
-        let (Block blocks) = block
-        if (length blocks == 0) then do
-            env <- ask
-            return (env, Nothing)
-        else do
-            let (Block (stm:rest)) = block
-            (env, ret) <- checkStatementType stm
-            local (const env) (checkStatementType (BStmt (Block rest)))
-
-    checkStatementType (Ass identifier expr) = do
-        typ <- getTypeFromEnv identifier
-        isConst <- isConstType typ
-        unless (not isConst) $ throwError $ OverridingConstException typ
-        exprType <- prepareExprType expr
-        prepareCheckTypeExpr expr typ
-        env <- ask
-        return (env, Nothing)
-
-    checkStatementType (AddArr identifier expr1 expr2) = do
-        typ <- getTypeFromEnv identifier
-        let arrayType = evalCorrectArray typ
-        if isNothing arrayType then
-            throwError $ NotAnArrayException
-        else do
-            prepareCheckTypeExpr expr1 Int
-            let (Just (Array innerType)) = arrayType
-            prepareCheckTypeExpr expr2 innerType
-            env <- ask
-            return (env, Nothing)
-
-    checkStatementType (Incr identifier) = do
-        typ <- getTypeFromEnv identifier 
-        prepareCheckType typ Int
-        env <- ask
-        return (env, Nothing)
-
-    checkStatementType (Decr identifier) = do
-        typ <- getTypeFromEnv identifier 
-        prepareCheckType typ Int
-        env <- ask
-        return (env, Nothing)
-
-    checkStatementType _ = do
-        env <- ask
-        return (env, Nothing)
-
-    checkStatementTypeForMany :: [Stmt] -> TC (TCEnv, TCRes)
-    checkStatementTypeForMany (stm:rest) = do
-        (env, ret) <- checkStatementType stm
-        if isNothing ret then
-            local (const env) (checkStatementTypeForMany rest)
-        else
-            return (env, ret)
-    checkStatementTypeForMany [] = do
-        env <- ask
-        return (env, Nothing)
+checkStatementTypeForMany :: [Stmt] -> [TopDef] -> TC (TCEnv, TCRes)
+checkStatementTypeForMany (stm : rest) functions = do
+  (env, ret) <- checkStatementType stm functions
+  -- throwError $ DoubleIdentifierInFunctionDeclarationException (show env ++ show ret ++ show (stm : rest))
+  if isNothing ret
+    then local (const env) (checkStatementTypeForMany rest functions)
+    else return (env, ret)
+checkStatementTypeForMany [] functions = do
+  env <- ask
+  return (env, Nothing)

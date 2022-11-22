@@ -1,7 +1,0 @@
-int dzuga () {
-  for (n in range (3, 21)) {
-    print(n);
-    print("\n");
-  }
-  return 0 ;
-}

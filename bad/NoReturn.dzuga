@@ -1,8 +1,0 @@
-int f() {
-    int a = 0;
-}
-
-int dzuga () {
-  int a = f();
-  return 0 ;
-}

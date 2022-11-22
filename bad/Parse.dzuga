@@ -1,5 +1,0 @@
-int dzuga () {
-  int a[7] = [4, 3, 2, 1];
-  a[6] = 5
-  return 0 ;
-}

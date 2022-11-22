@@ -1,5 +1,0 @@
-int dzuga () {
-  int a = 5;
-  a = true;
-  return 0;
-}
