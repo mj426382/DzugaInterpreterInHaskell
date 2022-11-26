@@ -147,6 +147,14 @@ instance Print AbsGrammar.Program where
 instance Print AbsGrammar.TopDef where
   prt i = \case
     AbsGrammar.FnDef type_ id_ args block -> prPrec i 0 (concatD [prt 0 type_, prt 0 id_, doc (showString "("), prt 0 args, doc (showString ")"), prt 0 block])
+    AbsGrammar.TopClsDef id_ clsdefs -> prPrec i 0 (concatD [doc (showString "class"), prt 0 id_, doc (showString "{"), prt 0 clsdefs, doc (showString "}")])
+    AbsGrammar.ExtClsDef id_1 id_2 clsdefs -> prPrec i 0 (concatD [doc (showString "class"), prt 0 id_1, doc (showString "extends"), prt 0 id_2, doc (showString "{"), prt 0 clsdefs, doc (showString "}")])
+
+instance Print [AbsGrammar.ClsDef] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
+  prt _ (x:xs) = concatD [prt 0 x, prt 0 xs]
 
 instance Print [AbsGrammar.TopDef] where
   prt _ [] = concatD []
@@ -158,6 +166,16 @@ instance Print AbsGrammar.Arg where
     AbsGrammar.Arg type_ id_ -> prPrec i 0 (concatD [prt 0 type_, prt 0 id_])
 
 instance Print [AbsGrammar.Arg] where
+  prt _ [] = concatD []
+  prt _ [x] = concatD [prt 0 x]
+  prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
+instance Print AbsGrammar.ClsDef where
+  prt i = \case
+    AbsGrammar.VarDef type_ ids -> prPrec i 0 (concatD [prt 0 type_, prt 0 ids, doc (showString ";")])
+    AbsGrammar.FunDef type_ id_ args block -> prPrec i 0 (concatD [prt 0 type_, prt 0 id_, doc (showString "("), prt 0 args, doc (showString ")"), prt 0 block])
+
+instance Print [AbsGrammar.Ident] where
   prt _ [] = concatD []
   prt _ [x] = concatD [prt 0 x]
   prt _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
@@ -183,6 +201,7 @@ instance Print AbsGrammar.Stmt where
     AbsGrammar.Cond expr stmt -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 stmt])
     AbsGrammar.CondElse expr stmt1 stmt2 -> prPrec i 0 (concatD [doc (showString "if"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 stmt1, doc (showString "else"), prt 0 stmt2])
     AbsGrammar.While expr stmt -> prPrec i 0 (concatD [doc (showString "while"), doc (showString "("), prt 0 expr, doc (showString ")"), prt 0 stmt])
+    AbsGrammar.For type_ id_ expr stmt -> prPrec i 0 (concatD [doc (showString "for"), doc (showString "("), prt 0 type_, prt 0 id_, doc (showString ":"), prt 0 expr, doc (showString ")"), prt 0 stmt])
     AbsGrammar.SExp expr -> prPrec i 0 (concatD [prt 0 expr, doc (showString ";")])
 
 instance Print AbsGrammar.Item where
@@ -201,6 +220,8 @@ instance Print AbsGrammar.Type where
     AbsGrammar.Str -> prPrec i 0 (concatD [doc (showString "string")])
     AbsGrammar.Bool -> prPrec i 0 (concatD [doc (showString "boolean")])
     AbsGrammar.Void -> prPrec i 0 (concatD [doc (showString "void")])
+    AbsGrammar.Class id_ -> prPrec i 0 (concatD [prt 0 id_])
+    AbsGrammar.ClassIntern id_1 id_2 clsdefs -> prPrec i 0 (concatD [prt 0 id_1, doc (showString "extends"), prt 0 id_2, doc (showString "{"), prt 0 clsdefs, doc (showString "}")])
     AbsGrammar.Fun type_ types -> prPrec i 0 (concatD [prt 0 type_, doc (showString "("), prt 0 types, doc (showString ")")])
 
 instance Print [AbsGrammar.Type] where
@@ -214,7 +235,10 @@ instance Print AbsGrammar.Expr where
     AbsGrammar.ELitInt n -> prPrec i 6 (concatD [prt 0 n])
     AbsGrammar.ELitTrue -> prPrec i 6 (concatD [doc (showString "true")])
     AbsGrammar.ELitFalse -> prPrec i 6 (concatD [doc (showString "false")])
+    AbsGrammar.ESelect expr id_ -> prPrec i 6 (concatD [prt 6 expr, doc (showString "."), prt 0 id_])
+    AbsGrammar.EFunCall expr id_ exprs -> prPrec i 6 (concatD [prt 6 expr, doc (showString "."), prt 0 id_, doc (showString "("), prt 0 exprs, doc (showString ")")])
     AbsGrammar.EApp id_ exprs -> prPrec i 6 (concatD [prt 0 id_, doc (showString "("), prt 0 exprs, doc (showString ")")])
+    AbsGrammar.EClass id_ -> prPrec i 6 (concatD [doc (showString "new"), prt 0 id_])
     AbsGrammar.EString str -> prPrec i 6 (concatD [printString str])
     AbsGrammar.Neg expr -> prPrec i 5 (concatD [doc (showString "-"), prt 6 expr])
     AbsGrammar.Not expr -> prPrec i 5 (concatD [doc (showString "!"), prt 6 expr])

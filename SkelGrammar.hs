@@ -26,10 +26,17 @@ transProgram x = case x of
 transTopDef :: AbsGrammar.TopDef -> Result
 transTopDef x = case x of
   AbsGrammar.FnDef type_ ident args block -> failure x
+  AbsGrammar.TopClsDef ident clsdefs -> failure x
+  AbsGrammar.ExtClsDef ident1 ident2 clsdefs -> failure x
 
 transArg :: AbsGrammar.Arg -> Result
 transArg x = case x of
   AbsGrammar.Arg type_ ident -> failure x
+
+transClsDef :: AbsGrammar.ClsDef -> Result
+transClsDef x = case x of
+  AbsGrammar.VarDef type_ idents -> failure x
+  AbsGrammar.FunDef type_ ident args block -> failure x
 
 transBlock :: AbsGrammar.Block -> Result
 transBlock x = case x of
@@ -48,6 +55,7 @@ transStmt x = case x of
   AbsGrammar.Cond expr stmt -> failure x
   AbsGrammar.CondElse expr stmt1 stmt2 -> failure x
   AbsGrammar.While expr stmt -> failure x
+  AbsGrammar.For type_ ident expr stmt -> failure x
   AbsGrammar.SExp expr -> failure x
 
 transItem :: AbsGrammar.Item -> Result
@@ -61,6 +69,8 @@ transType x = case x of
   AbsGrammar.Str -> failure x
   AbsGrammar.Bool -> failure x
   AbsGrammar.Void -> failure x
+  AbsGrammar.Class ident -> failure x
+  AbsGrammar.ClassIntern ident1 ident2 clsdefs -> failure x
   AbsGrammar.Fun type_ types -> failure x
 
 transExpr :: AbsGrammar.Expr -> Result
@@ -69,7 +79,10 @@ transExpr x = case x of
   AbsGrammar.ELitInt integer -> failure x
   AbsGrammar.ELitTrue -> failure x
   AbsGrammar.ELitFalse -> failure x
+  AbsGrammar.ESelect expr ident -> failure x
+  AbsGrammar.EFunCall expr ident exprs -> failure x
   AbsGrammar.EApp ident exprs -> failure x
+  AbsGrammar.EClass ident -> failure x
   AbsGrammar.EString string -> failure x
   AbsGrammar.Neg expr -> failure x
   AbsGrammar.Not expr -> failure x

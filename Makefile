@@ -2,13 +2,13 @@ GHC        = ghc
 
 .PHONY : all clean distclean
 
-all : interpreter
+all : compiler
 
-interpreter.hs AbsGrammar.hs LexGrammar.x ParGrammar.y PrintGrammar.hs TestGrammar.hs Types.hs StaticTypeChecker.hs: grammar.cf
-	bnfc --haskell grammar.cf
+# compiler.hs AbsGrammar.hs LexGrammar.x ParGrammar.y PrintGrammar.hs TestGrammar.hs Types.hs StaticTypeChecker.hs: grammar.cf
+# 	bnfc --haskell grammar.cf
 
-interpreter : interpreter.hs AbsGrammar.hs LexGrammar.hs ParGrammar.hs PrintGrammar.hs TestGrammar.hs Types.hs StaticTypeChecker.hs
-	${GHC} $@
+compiler : Compiler.hs AbsGrammar.hs LexGrammar.hs ParGrammar.hs PrintGrammar.hs TestGrammar.hs FrontendChecker.hs
+	${GHC} Compiler.hs
 
 clean :
 	-rm -f *.hi *.o *.log *.aux *.dvi

@@ -5,7 +5,7 @@ import Control.Monad.Except (ExceptT, MonadError (throwError))
 import Control.Monad.Reader (MonadReader (ask), ReaderT)
 import Data.Map (Map, lookup)
 
-data TypeCheckExceptions = InvalidTypeInDeclarationException Type | TypeCheckException Type Type | FuncApplicationException | DoubleIdentifierInFunctionDeclarationException String | DoubleInitializationException String | MismatchReturnFunctionType Type Type | FunctionNotReturnException Ident | NonexistingIdentifierException String deriving (Show)
+data TypeCheckExceptions = InvalidTypeInDeclarationException Type | TypeCheckException Type Type | FuncApplicationException | NoClassException Ident | NotAClassException | NotExistedIdentInClassException Ident | DoubleIdentifierInFunctionDeclarationException String | DoubleInitializationException String | MismatchReturnFunctionType Type Type | FunctionNotReturnException Ident | NonexistingIdentifierException String deriving (Show)
 
 type TCEnv = (Data.Map.Map String Type)
 
@@ -13,15 +13,26 @@ type TC = ReaderT TCEnv (ExceptT TypeCheckExceptions IO)
 
 type TCRes = Maybe Type
 
+type Class = (Data.Map.Map String Type)
+
 evalCorrectFunction :: Type -> Maybe Type
 evalCorrectFunction (Fun ret args) = Just (Fun ret args)
 evalCorrectFunction typ = Nothing
 
-getTypeFromEnv :: Ident -> TC Type
-getTypeFromEnv (Ident ident) = do
+evalCorrectClass :: Type -> Maybe Type
+evalCorrectClass (ClassIntern ident1 ident2 clsDefs) = Just (ClassIntern ident1 ident2 clsDefs)
+evalCorrectClass typ = Nothing
+
+getTypeFromEnv :: Ident -> Int -> TC Type
+getTypeFromEnv (Ident ident) 0 = do
   env <- ask
-  case Data.Map.lookup ident env of
+  case Data.Map.lookup (ident ++ "_" ++ show 0) env of
     Nothing -> throwError $ NonexistingIdentifierException ident
+    Just typ -> return typ
+getTypeFromEnv (Ident ident) depth = do
+  env <- ask
+  case Data.Map.lookup (ident ++ "_" ++ show depth) env of
+    Nothing -> getTypeFromEnv (Ident ident) (depth - 1)
     Just typ -> return typ
 
 isCorrectStmtType :: Type -> TC Bool
@@ -45,3 +56,8 @@ getTypesFromArgs (arg : rest) = do
   let (Arg typ ident) = arg
   restTypes <- getTypesFromArgs rest
   return $ (typ : restTypes)
+
+getTypesFromArgsWithoutMonad :: [Arg] -> [Type]
+getTypesFromArgsWithoutMonad [] = []
+getTypesFromArgsWithoutMonad [Arg typ ident] = [typ]
+getTypesFromArgsWithoutMonad ((Arg typ ident) : rest) = typ : getTypesFromArgsWithoutMonad rest

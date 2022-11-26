@@ -6,11 +6,25 @@ Program.   Program ::= [TopDef] ;
 
 FnDef.	   TopDef ::= Type Ident "(" [Arg] ")" Block ;
 
+TopClsDef. TopDef ::= "class" Ident "{" [ClsDef] "}" ;
+
+ExtClsDef. TopDef ::= "class" Ident "extends" Ident "{" [ClsDef] "}" ;
+
+separator nonempty ClsDef "" ;
+
 separator nonempty TopDef "" ;
 
 Arg. 	   Arg ::= Type Ident;
 
 separator  Arg "," ;
+
+-- class block ---------------------------------------------
+
+VarDef.    ClsDef ::= Type [Ident] ";" ;
+
+FunDef.    ClsDef ::= Type Ident "(" [Arg] ")" Block ;
+
+separator nonempty Ident "," ;
 
 -- statements ----------------------------------------------
 
@@ -46,6 +60,8 @@ CondElse.  Stmt ::= "if" "(" Expr ")" Stmt "else" Stmt  ;
 
 While.     Stmt ::= "while" "(" Expr ")" Stmt ;
 
+For.       Stmt ::= "for" "(" Type Ident ":" Expr ")" Stmt ;
+
 SExp.      Stmt ::= Expr  ";" ;
 
 -- Types ---------------------------------------------------
@@ -58,7 +74,13 @@ Bool.      Type ::= "boolean" ;
 
 Void.      Type ::= "void" ;
 
+Class.     Type ::= Ident ;
+
+internal   ClassIntern. Type ::= Ident "extends" Ident "{" [ClsDef] "}";
+
 internal   Fun. Type ::= Type "(" [Type] ")" ;
+
+separator  ClsDef "" ;
 
 separator  Type "," ;
 
@@ -72,7 +94,13 @@ ELitTrue.  Expr6 ::= "true" ;
 
 ELitFalse. Expr6 ::= "false" ;
 
+ESelect.   Expr6 ::= Expr6 "." Ident ;
+
+EFunCall.  Expr6 ::= Expr6 "." Ident "(" [Expr] ")" ;
+
 EApp.      Expr6 ::= Ident "(" [Expr] ")" ;
+
+EClass.    Expr6 ::= "new" Ident ;
 
 EString.   Expr6 ::= String ;
 

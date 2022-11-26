@@ -1,18 +1,18 @@
 module Main where
 
-import AbsGrammar (Program (Program))
+import AbsGrammar (Ident (Ident), Program (Program))
+import CompilerHelpers (RuntimeExceptions (DivisionByZeroException, ModulusByZeroException, NoReturnException, OutOfRangeExeption, UnitializedException))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (ReaderT (runReaderT))
 import Data.Map (empty)
 import DzugaInterpreter (interpretProgram)
-import DzugaInterpreterHelpers (RuntimeExceptions (DivisionByZeroException, ModulusByZeroException, NoReturnException, OutOfRangeExeption, UnitializedException))
 import ErrM
+import FrontendChecker (checkProgram, checkStatementTypeProgram)
 import ParGrammar (myLexer, pProgram)
-import StaticTypeChecker (checkProgram, checkStatementTypeProgram)
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
 import Text.ParserCombinators.Parsec.Token (GenTokenParser (identifier))
-import TypeCheckHelpers (TypeCheckExceptions (DoubleIdentifierInFunctionDeclarationException, DoubleInitializationException, FuncApplicationException, FunctionNotReturnException, InvalidTypeInDeclarationException, MismatchReturnFunctionType, NonexistingIdentifierException, TypeCheckException))
+import TypeCheckHelpers (TypeCheckExceptions (DoubleIdentifierInFunctionDeclarationException, DoubleInitializationException, FuncApplicationException, FunctionNotReturnException, InvalidTypeInDeclarationException, MismatchReturnFunctionType, NoClassException, NonexistingIdentifierException, NotAClassException, NotExistedIdentInClassException, TypeCheckException))
 
 returnError :: String -> IO ()
 returnError msg = do
@@ -36,10 +36,13 @@ parse input =
             FuncApplicationException -> returnError "Invalid function argument application"
             NonexistingIdentifierException identifier -> returnError $ "Identifier " ++ identifier ++ " doesn't exist"
             InvalidTypeInDeclarationException typ -> returnError $ "Invalid use of type " ++ show typ ++ " in declaration"
-            DoubleIdentifierInFunctionDeclarationException identifier -> returnError $ "Double idenftifier in function " ++ identifier ++ " declaration"
-            DoubleInitializationException identifier -> returnError $ "Double intialize " ++ identifier
+            DoubleIdentifierInFunctionDeclarationException ident -> returnError $ "Double idenftifier in function " ++ ident ++ " declaration"
+            DoubleInitializationException ident -> returnError $ "Double intialize " ++ ident
             MismatchReturnFunctionType t1 t2 -> returnError $ "Mismatch return type exception: expected " ++ show t2 ++ " get " ++ show t1
-            FunctionNotReturnException ident -> returnError $ "Non void function " ++ show ident ++ "does not return value"
+            FunctionNotReturnException (Ident ident) -> returnError $ "Non void function " ++ show ident ++ " does not return value"
+            NoClassException (Ident ident) -> returnError $ "The class " ++ show ident ++ "dones not exist"
+            NotAClassException -> returnError $ "Expected class"
+            NotExistedIdentInClassException ident -> returnError $ "Not existed identifier in class" ++ show ident
         Right _ -> do
           putStr "Correct"
           return ()

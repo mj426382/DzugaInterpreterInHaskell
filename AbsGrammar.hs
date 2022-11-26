@@ -13,10 +13,16 @@ import qualified Data.String
 data Program = Program [TopDef]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data TopDef = FnDef Type Ident [Arg] Block
+data TopDef
+    = FnDef Type Ident [Arg] Block
+    | TopClsDef Ident [ClsDef]
+    | ExtClsDef Ident Ident [ClsDef]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Arg = Arg Type Ident
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data ClsDef = VarDef Type [Ident] | FunDef Type Ident [Arg] Block
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Block = Block [Stmt]
@@ -34,13 +40,21 @@ data Stmt
     | Cond Expr Stmt
     | CondElse Expr Stmt Stmt
     | While Expr Stmt
+    | For Type Ident Expr Stmt
     | SExp Expr
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Item = NoInit Ident | Init Ident Expr
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
-data Type = Int | Str | Bool | Void | Fun Type [Type]
+data Type
+    = Int
+    | Str
+    | Bool
+    | Void
+    | Class Ident
+    | ClassIntern Ident Ident [ClsDef]
+    | Fun Type [Type]
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 data Expr
@@ -48,7 +62,10 @@ data Expr
     | ELitInt Integer
     | ELitTrue
     | ELitFalse
+    | ESelect Expr Ident
+    | EFunCall Expr Ident [Expr]
     | EApp Ident [Expr]
+    | EClass Ident
     | EString String
     | Neg Expr
     | Not Expr

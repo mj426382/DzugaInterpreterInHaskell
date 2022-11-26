@@ -1,10 +1,10 @@
 module Memory where
 
 import AbsGrammar (Ident (..))
+import CompilerHelpers (Function, II, IIEnv, RuntimeExceptions (UnitializedException), ValueInMemory (FunctionValue, IntValue))
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.Reader (MonadReader (ask))
 import Data.Map (insert, lookup)
-import DzugaInterpreterHelpers (Function, II, IIEnv, RuntimeExceptions (UnitializedException), ValueInMemory (FunctionValue, IntValue))
 
 addVarToMemory :: Ident -> ValueInMemory -> II IIEnv
 addVarToMemory (Ident identifier) memVal = do

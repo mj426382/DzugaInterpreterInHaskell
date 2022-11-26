@@ -1,16 +1,14 @@
-# Haskell Interpreter
+# Latte compiler
 
-Interpreter of my own programming language called `Dzuga` written in Haskell as a JPP project.
+It depends on two monad types: reader and exept so far.
 
-It depends on two monad types: reader and exept.
-
-## Type Checker
+## Frontend
 
 In type checker i use both monads, i store exceptions on exept monad and map from identifier into type in reader one.
 
-## Dzuga Interpreter
+<!-- ## Dzuga Interpreter
 
-In interpreter i also use both monads, i use the same way of storing exceptions and i store map from identifier into specific value like bool, int, string, function and array.
+In interpreter i also use both monads, i use the same way of storing exceptions and i store map from identifier into specific value like bool, int, string, function and array. -->
 
 # Running
 
@@ -25,5 +23,5 @@ make
 ### Run
 
 ```sh
-Main.exe <path_to_dzuga_code>
+compiler.exe <path_to_latte_program>
 ```

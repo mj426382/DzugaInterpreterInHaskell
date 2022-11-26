@@ -1,4 +1,4 @@
-module DzugaInterpreterHelpers where
+module CompilerHelpers where
 
 import AbsGrammar (Stmt, Type (Bool, Int, Str))
 import Control.Monad.Except (ExceptT)
@@ -11,7 +11,9 @@ type FArg = (String, Type)
 
 type Function = ([Stmt], IIEnv, [FArg], Type)
 
-data ValueInMemory = IntValue Integer | BooleanValue Bool | StringValue String | FunctionValue Function
+type Class = (Data.Map.Map String ValueInMemory)
+
+data ValueInMemory = IntValue Integer | BooleanValue Bool | StringValue String | FunctionValue Function | ClassValue Class
 
 type IIEnv = (Data.Map.Map String ValueInMemory)
 
