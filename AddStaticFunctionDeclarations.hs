@@ -22,7 +22,10 @@ addFunctionDeclarationWithoutAddingArgs (ExtClsDef (Ident identifier1) ident2 cl
     then throwError $ NoClassException ident2
     else do
       env <- ask
-      return (Data.Map.insert (identifier1 ++ "_0") (ClassIntern (Ident identifier1) ident2 clsdefs) env, Nothing)
+      let (Ident identifier2) = ident2
+      case Data.Map.lookup (identifier2 ++ "_0") env of
+        Nothing -> throwError $ NoClassException (Ident identifier2)
+        Just typ -> return (Data.Map.insert (identifier1 ++ "_0") (ClassIntern (Ident identifier1) ident2 clsdefs) env, Nothing)
 
 prepareClassEntities :: [ClsDef] -> Class -> Class
 prepareClassEntities ((FunDef typ (Ident identifier) args block) : rest) cla = do

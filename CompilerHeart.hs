@@ -1,4 +1,4 @@
-module DzugaInterpreter where
+module CompilerHeart where
 
 import AbsGrammar (Arg (..), Block (Block), Expr (EAdd, EAnd, EApp, ELitFalse, ELitInt, ELitTrue, EMul, EOr, ERel, EString, EVar, Neg, Not), Ident (..), Item (Init, NoInit), MulOp (Div, Mod), RelOp (LTH), Stmt (Ass, BStmt, Cond, CondElse, Decl, Decr, Incr, Ret, VRet, While), TopDef (..), Type (Void))
 import CompilerHelpers (FArg, II, IIEnv, ReturnResult, RuntimeExceptions (DivisionByZeroException, ModulusByZeroException, NoReturnException, OutOfRangeExeption), ValueInMemory (BooleanValue, FunctionValue, IntValue, StringValue), createEmptyList, defaultValueOfType, makeString)

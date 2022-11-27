@@ -1,11 +1,11 @@
 module Main where
 
 import AbsGrammar (Ident (Ident), Program (Program))
+import CompilerHeart (interpretProgram)
 import CompilerHelpers (RuntimeExceptions (DivisionByZeroException, ModulusByZeroException, NoReturnException, OutOfRangeExeption, UnitializedException))
 import Control.Monad.Except (runExceptT)
 import Control.Monad.Reader (ReaderT (runReaderT))
 import Data.Map (empty)
-import DzugaInterpreter (interpretProgram)
 import ErrM
 import FrontendChecker (checkProgram, checkStatementTypeProgram)
 import ParGrammar (myLexer, pProgram)
