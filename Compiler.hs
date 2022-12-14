@@ -12,7 +12,7 @@ import ParGrammar (myLexer, pProgram)
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
 import Text.ParserCombinators.Parsec.Token (GenTokenParser (identifier))
-import TypeCheckHelpers (TypeCheckExceptions (DoubleIdentifierInFunctionDeclarationException, DoubleInitializationException, FuncApplicationException, FunctionNotReturnException, InvalidTypeInDeclarationException, MismatchReturnFunctionType, NoClassException, NonexistingIdentifierException, NotAClassException, NotExistedIdentInClassException, TypeCheckException))
+import TypeCheckHelpers (TypeCheckExceptions (DoubleClassException, DoubleFunctionException, DoubleIdentifierInFunctionDeclarationException, DoubleInitializationException, FuncApplicationException, FunctionNotReturnException, InvalidTypeInDeclarationException, IvalidMainArgumentsException, MismatchReturnFunctionType, NoClassException, NoMainException, NonexistingIdentifierException, NotAClassException, NotExistedIdentInClassException, TypeCheckException, VoidArgumentInFunctionException))
 
 returnError :: String -> IO ()
 returnError msg = do
@@ -43,8 +43,18 @@ parse input =
             NoClassException (Ident ident) -> returnError $ "The class " ++ show ident ++ "dones not exist"
             NotAClassException -> returnError $ "Expected class"
             NotExistedIdentInClassException ident -> returnError $ "Not existed identifier in class" ++ show ident
+            VoidArgumentInFunctionException ident -> returnError $ "Void argument in function " ++ show ident
+            NoMainException -> returnError $ "No main function"
+            IvalidMainArgumentsException -> returnError $ "Main should have no arguments"
+            DoubleFunctionException ident -> returnError $ "Double declaration of function " ++ show ident
+            DoubleClassException ident -> returnError $ "Double declaration of class " ++ show ident
         Right _ -> do
           putStr "Correct"
+          -- args <- getArgs
+          -- let fileName = args !! 0
+          -- let outputFile = replaceExtension fileName ".ll"
+          -- progText <- readFile $ fileName
+          -- parseAndCompile progText outputFile
           return ()
     -- runTimeResult <- runExceptT $ runReaderT (interpretProgram program) Data.Map.empty
     -- case runTimeResult of

@@ -5,17 +5,37 @@ import Control.Monad.Except (MonadError (throwError), unless)
 import Control.Monad.Reader (MonadReader (ask))
 import Control.Monad.Reader.Class (MonadReader (local))
 import qualified Data.Map
-import TypeCheckHelpers (Class, TC, TCEnv, TCRes, TypeCheckExceptions (NoClassException), getTypesFromArgs, getTypesFromArgsWithoutMonad)
+import TypeCheckHelpers (Class, TC, TCEnv, TCRes, TypeCheckExceptions (DoubleClassException, DoubleFunctionException, NoClassException, VoidArgumentInFunctionException), getTypesFromArgs, getTypesFromArgsWithoutMonad)
+
+checkFunctionArgs :: [Type] -> String -> TC (TCEnv, TCRes)
+checkFunctionArgs (Void : rest) ident = do
+  throwError $ VoidArgumentInFunctionException ident
+checkFunctionArgs _ ident = do
+  env <- ask
+  return (env, Nothing)
+
+checkFullFunctionArgs :: TopDef -> TC (TCEnv, TCRes)
+checkFullFunctionArgs (FnDef typ (Ident identifier) args block) = do
+  argTypes <- getTypesFromArgs args
+  checkFunctionArgs argTypes identifier
+checkFullFunctionArgs _ = do
+  env <- ask
+  return (env, Nothing)
 
 addFunctionDeclarationWithoutAddingArgs :: TopDef -> TC (TCEnv, TCRes)
 addFunctionDeclarationWithoutAddingArgs (FnDef typ (Ident identifier) args block) = do
+  checkFullFunctionArgs (FnDef typ (Ident identifier) args block)
   argTypes <- getTypesFromArgs args
   let fnType = (Fun typ argTypes)
   env <- ask
-  return (Data.Map.insert (identifier ++ "_0") fnType env, Nothing)
+  case Data.Map.lookup (identifier ++ "_0") env of
+    Nothing -> return (Data.Map.insert (identifier ++ "_0") fnType env, Nothing)
+    Just typ -> throwError $ DoubleFunctionException identifier
 addFunctionDeclarationWithoutAddingArgs (TopClsDef (Ident identifier) clsdefs) = do
   env <- ask
-  return (Data.Map.insert (identifier ++ "_0") (ClassIntern (Ident identifier) (Ident "---") clsdefs) env, Nothing)
+  case Data.Map.lookup (identifier ++ "_0") env of
+    Nothing -> return (Data.Map.insert (identifier ++ "_0") (ClassIntern (Ident identifier) (Ident "---") clsdefs) env, Nothing)
+    Just typ -> throwError $ DoubleClassException identifier
 addFunctionDeclarationWithoutAddingArgs (ExtClsDef (Ident identifier1) ident2 clsdefs) = do
   let (Ident identifier2) = ident2
   if identifier1 == identifier2
@@ -25,7 +45,9 @@ addFunctionDeclarationWithoutAddingArgs (ExtClsDef (Ident identifier1) ident2 cl
       let (Ident identifier2) = ident2
       case Data.Map.lookup (identifier2 ++ "_0") env of
         Nothing -> throwError $ NoClassException (Ident identifier2)
-        Just typ -> return (Data.Map.insert (identifier1 ++ "_0") (ClassIntern (Ident identifier1) ident2 clsdefs) env, Nothing)
+        Just typ -> case Data.Map.lookup (identifier1 ++ "_0") env of
+          Nothing -> return (Data.Map.insert (identifier1 ++ "_0") (ClassIntern (Ident identifier1) ident2 clsdefs) env, Nothing)
+          Just typ -> throwError $ DoubleClassException identifier1
 
 prepareClassEntities :: [ClsDef] -> Class -> Class
 prepareClassEntities ((FunDef typ (Ident identifier) args block) : rest) cla = do
@@ -71,3 +93,8 @@ addReadStringDeclaration :: [TopDef] -> TC (TCEnv, TCRes)
 addReadStringDeclaration functions = do
   env <- ask
   return (Data.Map.insert "readString_0" (Fun Str []) env, Nothing)
+
+addErrorDeclaration :: [TopDef] -> TC (TCEnv, TCRes)
+addErrorDeclaration functions = do
+  env <- ask
+  return (Data.Map.insert "error_0" (Fun Void []) env, Nothing)

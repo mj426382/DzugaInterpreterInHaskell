@@ -1,0 +1,14 @@
+// Assigning int to string variable.
+
+void b() {
+    return;
+}
+
+void b() {
+    return;
+}
+
+int main() {
+ string x;
+ return 0 ;
+}

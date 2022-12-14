@@ -5,7 +5,7 @@ import Control.Monad.Except (ExceptT, MonadError (throwError))
 import Control.Monad.Reader (MonadReader (ask), ReaderT)
 import Data.Map (Map, lookup)
 
-data TypeCheckExceptions = InvalidTypeInDeclarationException Type | TypeCheckException Type Type | FuncApplicationException | NoClassException Ident | NotAClassException | NotExistedIdentInClassException Ident | DoubleIdentifierInFunctionDeclarationException String | DoubleInitializationException String | MismatchReturnFunctionType Type Type | FunctionNotReturnException Ident | NonexistingIdentifierException String deriving (Show)
+data TypeCheckExceptions = InvalidTypeInDeclarationException Type | TypeCheckException Type Type | FuncApplicationException | NoClassException Ident | NotAClassException | NotExistedIdentInClassException Ident | DoubleIdentifierInFunctionDeclarationException String | DoubleInitializationException String | MismatchReturnFunctionType Type Type | FunctionNotReturnException Ident | VoidArgumentInFunctionException String | NoMainException | IvalidMainArgumentsException | DoubleFunctionException String | DoubleClassException String | NonexistingIdentifierException String deriving (Show)
 
 type TCEnv = (Data.Map.Map String Type)
 

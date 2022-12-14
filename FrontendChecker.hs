@@ -1,14 +1,14 @@
 module FrontendChecker where
 
 import AbsGrammar (Arg (..), Block (Block), ClsDef (FunDef, VarDef), Expr (ELitFalse, ELitTrue), Ident (Ident), Stmt (..), TopDef (..), Type (Bool, Fun, Int, Str, Void))
-import AddStaticFunctionDeclarations (addFunctionDeclarations, addPrintBoolDeclaration, addPrintIntDeclaration, addPrintStringDeclaration, addReadIntDeclaration, addReadStringDeclaration)
+import AddStaticFunctionDeclarations (addErrorDeclaration, addFunctionDeclarations, addPrintBoolDeclaration, addPrintIntDeclaration, addPrintStringDeclaration, addReadIntDeclaration, addReadStringDeclaration)
 import CheckingPreparation (prepareExprType)
 import CheckingStatements (checkStatementType, checkStatementTypeForMany)
 import Control.Monad.Except (throwError)
 import Control.Monad.Reader (MonadReader (ask, local))
 import Data.Map (insert, lookup)
 import Data.Maybe (isNothing)
-import TypeCheckHelpers (TC, TCEnv, TCRes, TypeCheckExceptions (DoubleIdentifierInFunctionDeclarationException, FunctionNotReturnException, MismatchReturnFunctionType), getTypesFromArgs)
+import TypeCheckHelpers (TC, TCEnv, TCRes, TypeCheckExceptions (DoubleIdentifierInFunctionDeclarationException, FunctionNotReturnException, IvalidMainArgumentsException, MismatchReturnFunctionType, NoMainException), getTypesFromArgs)
 
 addArgsToEnv :: [Arg] -> TC (TCEnv, TCRes)
 addArgsToEnv [] = do
@@ -167,13 +167,46 @@ checkClassFunction [] = do
   env <- ask
   return (env, Nothing)
 
+checkOnlyMainFunction :: [Arg] -> TC (TCEnv, TCRes)
+checkOnlyMainFunction [] = do
+  env <- ask
+  return (env, Nothing)
+checkOnlyMainFunction args = do
+  throwError $ IvalidMainArgumentsException
+
+checkMainFunction :: [TopDef] -> Int -> TC (TCEnv, TCRes)
+checkMainFunction ((FnDef typ (Ident identifier) args block) : rest) num =
+  if identifier == "main"
+    then do
+      (env, ret) <- checkOnlyMainFunction args
+      return (env, ret)
+    else do
+      env <- ask
+      checkMainFunction rest num
+checkMainFunction (cla : rest) num = do
+  env <- ask
+  checkMainFunction rest num
+checkMainFunction [] num =
+  if num /= 0
+    then throwError $ NoMainException
+    else do
+      env <- ask
+      return (env, Nothing)
+
+countFunctions :: [TopDef] -> Int
+countFunctions [] = 0
+countFunctions ((FnDef typ (Ident identifier) args block) : rest) = 1 + countFunctions rest
+countFunctions (cla : rest) = countFunctions rest
+
 checkProgram :: [TopDef] -> TC (TCEnv, TCRes)
 checkProgram functions = do
+  checkMainFunction functions (countFunctions functions)
   (env, ret) <- addFunctionDeclarations functions
   (env2, ret2) <- local (const env) (addPrintIntDeclaration functions)
   (env3, ret3) <- local (const env2) (addPrintStringDeclaration functions)
   (env35, ret35) <- local (const env3) (addReadIntDeclaration functions)
   (env375, ret375) <- local (const env35) (addReadStringDeclaration functions)
   (env4, ret4) <- local (const env375) (addPrintBoolDeclaration functions)
-  (env5, ret5) <- local (const env4) (checkStatementTypeProgram functions)
+  (env45, ret45) <- local (const env4) (addErrorDeclaration functions)
+  (env5, ret5) <- local (const env45) (checkStatementTypeProgram functions)
   return (env5, ret5)
